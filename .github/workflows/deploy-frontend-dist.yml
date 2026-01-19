@@ -1,0 +1,60 @@
+name: Deploy Frontend Dist
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 🚀 Deploy dist to server via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ubuntu
+          key: ${{ secrets.SSH_KEY }}
+          port: 22
+          script: |
+            set -e
+
+            # ================= CONFIG =================
+            WORK_DIR="/home/ubuntu/cygnet_dist"
+            TARGET_DIR="/var/www/yaatrabuddy-frontend"
+            ZIP_PATTERN="dist*.zip"
+            OWNER="www-data"
+            GROUP="www-data"
+            # ==========================================
+
+            echo "📁 Move to dist repository"
+            cd $WORK_DIR
+
+            echo "📥 Pulling latest code"
+            git pull origin main
+
+            echo "📦 Locating latest dist zip"
+            ZIP_FILE=$(ls -t $ZIP_PATTERN | head -n 1)
+
+            if [ -z "$ZIP_FILE" ]; then
+              echo "❌ No dist zip found"
+              exit 1
+            fi
+
+            echo "✅ Using zip: $ZIP_FILE"
+
+            echo "🧹 Cleaning old frontend files"
+            sudo rm -rf $TARGET_DIR/*
+
+            echo "📦 Extracting dist"
+            sudo unzip -o $ZIP_FILE -d $TARGET_DIR
+
+            echo "👤 Setting ownership"
+            sudo chown -R $OWNER:$GROUP $TARGET_DIR
+
+            echo "🔐 Setting permissions"
+            sudo find $TARGET_DIR -type d -exec chmod 775 {} \;
+            sudo find $TARGET_DIR -type f -exec chmod 775 {} \;
+
+            echo "✅ Frontend dist deployed successfully"
