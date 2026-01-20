@@ -28,14 +28,21 @@ jobs:
             GROUP="www-data"
             # ==========================================
 
-            echo "📁 Move to dist repository"
-            cd $WORK_DIR
+            echo "📁 Moving to dist repository"
+            cd "$WORK_DIR"
 
             echo "📥 Pulling latest code"
             git pull origin main
 
+            echo "🔍 Checking unzip availability"
+            if ! command -v unzip >/dev/null 2>&1; then
+              echo "📦 unzip not found, installing..."
+              sudo apt update
+              sudo apt install unzip -y
+            fi
+
             echo "📦 Locating latest dist zip"
-            ZIP_FILE=$(ls -t $ZIP_PATTERN | head -n 1)
+            ZIP_FILE=$(ls -t $ZIP_PATTERN 2>/dev/null | head -n 1)
 
             if [ -z "$ZIP_FILE" ]; then
               echo "❌ No dist zip found"
@@ -45,16 +52,16 @@ jobs:
             echo "✅ Using zip: $ZIP_FILE"
 
             echo "🧹 Cleaning old frontend files"
-            sudo rm -rf $TARGET_DIR/*
+            sudo rm -rf "$TARGET_DIR"/*
 
             echo "📦 Extracting dist"
-            sudo unzip -o $ZIP_FILE -d $TARGET_DIR
+            sudo unzip -o "$ZIP_FILE" -d "$TARGET_DIR"
 
             echo "👤 Setting ownership"
-            sudo chown -R $OWNER:$GROUP $TARGET_DIR
+            sudo chown -R "$OWNER":"$GROUP" "$TARGET_DIR"
 
             echo "🔐 Setting permissions"
-            sudo find $TARGET_DIR -type d -exec chmod 775 {} \;
-            sudo find $TARGET_DIR -type f -exec chmod 775 {} \;
+            sudo find "$TARGET_DIR" -type d -exec chmod 775 {} \;
+            sudo find "$TARGET_DIR" -type f -exec chmod 775 {} \;
 
-            echo "✅ Frontend dist deployed successfully"
+            echo "🎉 Frontend dist deployed successfully"
