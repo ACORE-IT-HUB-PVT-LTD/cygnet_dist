@@ -22,7 +22,7 @@ jobs:
 
             # ================= CONFIG =================
             WORK_DIR="/home/ubuntu/cygnet_dist"
-            TARGET_DIR="/var/www/yaatrabuddy-frontend"
+            TARGET_DIR="/var/www/yaatrabuddy-frontend/dist"
             ZIP_PATTERN="dist*.zip"
             OWNER="www-data"
             GROUP="www-data"
